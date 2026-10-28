@@ -1,0 +1,191 @@
+[
+  {
+    "Table": "_Measures",
+    "Name": "Scope 1 Diesel Emissions (tCO2e)",
+    "Expression": "DIVIDE(SUM(Fact_Store_ESG_Monthly[Generator_Diesel_Litres]) * 2.68, 1000, 0)",
+    "FormatString": "#,##0.0 \"tCO2e\"",
+    "DisplayFolder": "01 Carbon Accounting & Energy"
+  },
+  {
+    "Table": "_Measures",
+    "Name": "Scope 2 Grid Electricity Emissions (tCO2e)",
+    "Expression": "DIVIDE(SUM(Fact_Store_ESG_Monthly[Grid_Electricity_kWh]) * 0.93, 1000, 0)",
+    "FormatString": "#,##0.0 \"tCO2e\"",
+    "DisplayFolder": "01 Carbon Accounting & Energy"
+  },
+  {
+    "Table": "_Measures",
+    "Name": "Total Scope 1 & 2 Emissions (tCO2e)",
+    "Expression": "[Scope 1 Diesel Emissions (tCO2e)] + [Scope 2 Grid Electricity Emissions (tCO2e)]",
+    "FormatString": "#,##0.0 \"tCO2e\"",
+    "DisplayFolder": "01 Carbon Accounting & Energy"
+  },
+  {
+    "Table": "_Measures",
+    "Name": "Solar Carbon Avoided (tCO2e)",
+    "Expression": "DIVIDE(SUM(Fact_Store_ESG_Monthly[Solar_Generated_kWh]) * 0.93, 1000, 0)",
+    "FormatString": "#,##0.0 \"tCO2e\"",
+    "DisplayFolder": "01 Carbon Accounting & Energy"
+  },
+  {
+    "Table": "_Measures",
+    "Name": "Renewable Energy Mix %",
+    "Expression": "VAR TotalDemand = SUM(Fact_Store_ESG_Monthly[Total_Electricity_Demand_kWh])\nVAR SolarKwh = SUM(Fact_Store_ESG_Monthly[Solar_Generated_kWh])\nRETURN\nDIVIDE(SolarKwh, TotalDemand, 0)",
+    "FormatString": "0.0%",
+    "DisplayFolder": "01 Carbon Accounting & Energy"
+  },
+  {
+    "Table": "_Measures",
+    "Name": "Total Retail Area (SqM)",
+    "Expression": "SUM(Dim_Stores[Retail_GLA_SqM])",
+    "FormatString": "#,##0 \"m²\"",
+    "DisplayFolder": "02 Resource Intensity & Benchmarking"
+  },
+  {
+    "Table": "_Measures",
+    "Name": "Energy Intensity (kWh / SqM)",
+    "Expression": "VAR TotalEnergy = SUM(Fact_Store_ESG_Monthly[Total_Electricity_Demand_kWh])\nVAR TotalGLA = [Total Retail Area (SqM)]\nRETURN\nDIVIDE(TotalEnergy, TotalGLA, 0)",
+    "FormatString": "0.0 \"kWh/m²\"",
+    "DisplayFolder": "02 Resource Intensity & Benchmarking"
+  },
+  {
+    "Table": "_Measures",
+    "Name": "Carbon Intensity (kgCO2e / SqM)",
+    "Expression": "VAR TotalKgCO2e = ([Total Scope 1 & 2 Emissions (tCO2e)] * 1000)\nVAR TotalGLA = [Total Retail Area (SqM)]\nRETURN\nDIVIDE(TotalKgCO2e, TotalGLA, 0)",
+    "FormatString": "0.0 \"kgCO2e/m²\"",
+    "DisplayFolder": "02 Resource Intensity & Benchmarking"
+  },
+  {
+    "Table": "_Measures",
+    "Name": "Water Intensity (kL / SqM)",
+    "Expression": "VAR TotalWater = SUM(Fact_Store_ESG_Monthly[Municipal_Water_kL])\nVAR TotalGLA = [Total Retail Area (SqM)]\nRETURN\nDIVIDE(TotalWater, TotalGLA, 0)",
+    "FormatString": "0.000 \"kL/m²\"",
+    "DisplayFolder": "02 Resource Intensity & Benchmarking"
+  },
+  {
+    "Table": "_Measures",
+    "Name": "Total Packaging Waste (Tonnes)",
+    "Expression": "DIVIDE(SUM(Fact_Store_ESG_Monthly[Packaging_Waste_kg]), 1000, 0)",
+    "FormatString": "#,##0.0 \"t\"",
+    "DisplayFolder": "03 Circular Economy & Waste"
+  },
+  {
+    "Table": "_Measures",
+    "Name": "Total Recycled Waste (Tonnes)",
+    "Expression": "DIVIDE(SUM(Fact_Store_ESG_Monthly[Recycled_Packaging_kg]), 1000, 0)",
+    "FormatString": "#,##0.0 \"t\"",
+    "DisplayFolder": "03 Circular Economy & Waste"
+  },
+  {
+    "Table": "_Measures",
+    "Name": "Packaging Recycling Diversion Rate %",
+    "Expression": "VAR Recycled = SUM(Fact_Store_ESG_Monthly[Recycled_Packaging_kg])\nVAR TotalPkg = SUM(Fact_Store_ESG_Monthly[Packaging_Waste_kg])\nRETURN\nDIVIDE(Recycled, TotalPkg, 0)",
+    "FormatString": "0.0%",
+    "DisplayFolder": "03 Circular Economy & Waste"
+  },
+  {
+    "Table": "_Measures",
+    "Name": "Hazardous Medical Waste (kg)",
+    "Expression": "SUM(Fact_Store_ESG_Monthly[Hazardous_Clinical_Waste_kg])",
+    "FormatString": "#,##0.0 \"kg\"",
+    "DisplayFolder": "03 Circular Economy & Waste"
+  },
+  {
+    "Table": "_Measures",
+    "Name": "Medical Waste Manifest Compliance Rate %",
+    "Expression": "VAR TotalClinicRecords = COUNTROWS(Fact_Store_ESG_Monthly)\nVAR CompliantManifests = \n    CALCULATE(\n        COUNTROWS(Fact_Store_ESG_Monthly),\n        Fact_Store_ESG_Monthly[Clinical_Waste_Manifest_Status] = \"Compliant - Manifest on File\"\n    )\nRETURN\nDIVIDE(CompliantManifests, TotalClinicRecords, 0)",
+    "FormatString": "0.0%",
+    "DisplayFolder": "03 Circular Economy & Waste"
+  },
+  {
+    "Table": "_Measures",
+    "Name": "Total Store Reporting Months",
+    "Expression": "COUNTROWS(Fact_Store_ESG_Monthly)",
+    "FormatString": "#,0",
+    "DisplayFolder": "04 Assurance & Internal Audit"
+  },
+  {
+    "Table": "_Measures",
+    "Name": "Audit Verified Months",
+    "Expression": "CALCULATE(\n    COUNTROWS(Fact_Store_ESG_Monthly),\n    Fact_Store_ESG_Monthly[Assurance_Audit_Status] = \"Verified - Audit Trail Clear\"\n)",
+    "FormatString": "#,0",
+    "DisplayFolder": "04 Assurance & Internal Audit"
+  },
+  {
+    "Table": "_Measures",
+    "Name": "Assurance Audit Readiness %",
+    "Expression": "DIVIDE([Audit Verified Months], [Total Store Reporting Months], 0)",
+    "FormatString": "0.0%",
+    "DisplayFolder": "04 Assurance & Internal Audit"
+  },
+  {
+    "Table": "_Measures",
+    "Name": "High Risk Audit Exceptions Count",
+    "Expression": "CALCULATE(\n    COUNTROWS(Fact_Store_ESG_Monthly),\n    Fact_Store_ESG_Monthly[Assurance_Audit_Status] IN {\n        \"Flagged - Municipal Estimate Variance\",\n        \"Flagged - Unexplained Consumption Spike (>20%)\"\n    }\n)",
+    "FormatString": "#,0",
+    "DisplayFolder": "04 Assurance & Internal Audit"
+  },
+  {
+    "Table": "_Measures",
+    "Name": "Municipal Estimate Billing Share %",
+    "Expression": "VAR EstimatedRecords = \n    CALCULATE(\n        COUNTROWS(Fact_Store_ESG_Monthly),\n        Fact_Store_ESG_Monthly[Municipal_Billing_Type] = \"Municipal Estimate\"\n    )\nRETURN\nDIVIDE(EstimatedRecords, [Total Store Reporting Months], 0)",
+    "FormatString": "0.0%",
+    "DisplayFolder": "04 Assurance & Internal Audit"
+  },
+  {
+    "Table": "_Measures",
+    "Name": "Total Active Suppliers",
+    "Expression": "COUNTROWS(Dim_Suppliers_ESG)",
+    "FormatString": "#,0",
+    "DisplayFolder": "05 Supplier ESG & Governance"
+  },
+  {
+    "Table": "_Measures",
+    "Name": "Total Sourcing Spend (ZAR Millions)",
+    "Expression": "SUM(Dim_Suppliers_ESG[Annual_Spend_ZAR_Millions])",
+    "FormatString": "R #,##0.0 \"M\"",
+    "DisplayFolder": "05 Supplier ESG & Governance"
+  },
+  {
+    "Table": "_Measures",
+    "Name": "Supplier CoC Sign-Off Rate %",
+    "Expression": "VAR SignedCount = \n    CALCULATE(\n        COUNTROWS(Dim_Suppliers_ESG),\n        Dim_Suppliers_ESG[Code_of_Conduct_Status] = \"Executed & Active\"\n    )\nRETURN\nDIVIDE(SignedCount, [Total Active Suppliers], 0)",
+    "FormatString": "0.0%",
+    "DisplayFolder": "05 Supplier ESG & Governance"
+  },
+  {
+    "Table": "_Measures",
+    "Name": "Weighted Supplier ESG Score",
+    "Expression": "VAR TotalSpend = [Total Sourcing Spend (ZAR Millions)]\nVAR WeightedPoints = \n    SUMX(\n        Dim_Suppliers_ESG,\n        Dim_Suppliers_ESG[ESG_Audit_Score] * Dim_Suppliers_ESG[Annual_Spend_ZAR_Millions]\n    )\nRETURN\nDIVIDE(WeightedPoints, TotalSpend, 0)",
+    "FormatString": "0.0",
+    "DisplayFolder": "05 Supplier ESG & Governance"
+  },
+  {
+    "Table": "_Measures",
+    "Name": "High Risk Spend Exposure (ZAR Millions)",
+    "Expression": "CALCULATE(\n    [Total Sourcing Spend (ZAR Millions)],\n    Dim_Suppliers_ESG[ESG_Risk_Rating] = \"High Risk - Corrective Action Plan Required\"\n)",
+    "FormatString": "R #,##0.0 \"M\"",
+    "DisplayFolder": "05 Supplier ESG & Governance"
+  },
+  {
+    "Table": "_Measures",
+    "Name": "High Risk Spend Exposure %",
+    "Expression": "DIVIDE([High Risk Spend Exposure (ZAR Millions)], [Total Sourcing Spend (ZAR Millions)], 0)",
+    "FormatString": "0.0%",
+    "DisplayFolder": "05 Supplier ESG & Governance"
+  },
+  {
+    "Table": "_Measures",
+    "Name": "Status Color - Audit Readiness",
+    "Expression": "SWITCH(\n    TRUE(),\n    [Assurance Audit Readiness %] >= 0.90, \"#10B981\",\n    [Assurance Audit Readiness %] >= 0.80, \"#F59E0B\",\n    \"#EF4444\"\n)",
+    "FormatString": "",
+    "DisplayFolder": "06 Dynamic Color Logic"
+  },
+  {
+    "Table": "_Measures",
+    "Name": "Status Color - Supplier Risk",
+    "Expression": "SWITCH(\n    TRUE(),\n    [High Risk Spend Exposure %] <= 0.10, \"#10B981\",\n    [High Risk Spend Exposure %] <= 0.20, \"#F59E0B\",\n    \"#EF4444\"\n)",
+    "FormatString": "",
+    "DisplayFolder": "06 Dynamic Color Logic"
+  }
+]

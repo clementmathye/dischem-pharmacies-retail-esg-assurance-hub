@@ -1,0 +1,208 @@
+// ========================================================================================
+// ENTERPRISE PHARMACY RETAIL ESG & ASSURANCE HUB - PRODUCTION DAX MEASURES
+// Organization: Simulated South African Retail Pharmacy Network (Dis-Chem / JSE Aligned)
+// Data Model: Star Schema (Dim_Stores, Dim_Calendar, Dim_Suppliers_ESG, Fact_Store_ESG_Monthly)
+// Author: Clement Mathye (BCIS)
+// ========================================================================================
+
+// ----------------------------------------------------------------------------------------
+// FOLDER: 01_Carbon Accounting & Energy (GHG Protocol Scope 1 & Scope 2)
+// ----------------------------------------------------------------------------------------
+
+[Scope 1 Diesel Emissions (tCO2e)] = 
+// Stationary Diesel Generators: DEFRA / SA Technical Guidelines factor ~2.68 kg CO2e / Litre
+DIVIDE(
+    SUM(Fact_Store_ESG_Monthly[Generator_Diesel_Litres]) * 2.68,
+    1000,
+    0
+)
+
+[Scope 2 Grid Electricity Emissions (tCO2e)] = 
+// Eskom SA Grid Average Factor: ~0.93 kg CO2e / kWh (0.93 tCO2e / MWh)
+DIVIDE(
+    SUM(Fact_Store_ESG_Monthly[Grid_Electricity_kWh]) * 0.93,
+    1000,
+    0
+)
+
+[Total Scope 1 & 2 Emissions (tCO2e)] = 
+[Scope 1 Diesel Emissions (tCO2e)] + [Scope 2 Grid Electricity Emissions (tCO2e)]
+
+[Solar Carbon Avoided (tCO2e)] = 
+// Clean Solar Generation Offset against Eskom Grid Factor
+DIVIDE(
+    SUM(Fact_Store_ESG_Monthly[Solar_Generated_kWh]) * 0.93,
+    1000,
+    0
+)
+
+[Renewable Energy Mix %] = 
+// Share of Total On-Site Electricity Generated via Rooftop Solar PV
+VAR TotalDemand = SUM(Fact_Store_ESG_Monthly[Total_Electricity_Demand_kWh])
+VAR SolarKwh = SUM(Fact_Store_ESG_Monthly[Solar_Generated_kWh])
+RETURN
+DIVIDE(SolarKwh, TotalDemand, 0)
+
+
+// ----------------------------------------------------------------------------------------
+// FOLDER: 02_Resource Intensity & Benchmarking (GRI 302 & Retail Standards)
+// ----------------------------------------------------------------------------------------
+
+[Total Retail Area (SqM)] = 
+SUM(Dim_Stores[Retail_GLA_SqM])
+
+[Energy Intensity (kWh / SqM)] = 
+// Gross Electricity Consumed per Square Metre of Retail GLA
+VAR TotalEnergy = SUM(Fact_Store_ESG_Monthly[Total_Electricity_Demand_kWh])
+VAR TotalGLA = [Total Retail Area (SqM)]
+RETURN
+DIVIDE(TotalEnergy, TotalGLA, 0)
+
+[Carbon Intensity (kgCO2e / SqM)] = 
+// Carbon footprint per square metre of trading space
+VAR TotalKgCO2e = ([Total Scope 1 & 2 Emissions (tCO2e)] * 1000)
+VAR TotalGLA = [Total Retail Area (SqM)]
+RETURN
+DIVIDE(TotalKgCO2e, TotalGLA, 0)
+
+[Water Intensity (kL / SqM)] = 
+// Municipal Water Consumption per Square Metre
+VAR TotalWater = SUM(Fact_Store_ESG_Monthly[Municipal_Water_kL])
+VAR TotalGLA = [Total Retail Area (SqM)]
+RETURN
+DIVIDE(TotalWater, TotalGLA, 0)
+
+
+// ----------------------------------------------------------------------------------------
+// FOLDER: 03_Circular Economy & Hazardous Medical Waste (GRI 306 & NEMWA)
+// ----------------------------------------------------------------------------------------
+
+[Total Packaging Waste (Tonnes)] = 
+DIVIDE(SUM(Fact_Store_ESG_Monthly[Packaging_Waste_kg]), 1000, 0)
+
+[Total Recycled Waste (Tonnes)] = 
+DIVIDE(SUM(Fact_Store_ESG_Monthly[Recycled_Packaging_kg]), 1000, 0)
+
+[Packaging Recycling Diversion Rate %] = 
+// % of Cardboard, Plastic & Logistics Packaging Diverted from Landfill
+VAR Recycled = SUM(Fact_Store_ESG_Monthly[Recycled_Packaging_kg])
+VAR TotalPkg = SUM(Fact_Store_ESG_Monthly[Packaging_Waste_kg])
+RETURN
+DIVIDE(Recycled, TotalPkg, 0)
+
+[Hazardous Medical Waste (kg)] = 
+// Clinic Sharps, Biopharm Waste, Expired Scheduled Medicines
+SUM(Fact_Store_ESG_Monthly[Hazardous_Clinical_Waste_kg])
+
+[Medical Waste Manifest Compliance Rate %] = 
+// Safe destruction certificates on file vs total clinic reporting events
+VAR TotalClinicRecords = COUNTROWS(Fact_Store_ESG_Monthly)
+VAR CompliantManifests = 
+    CALCULATE(
+        COUNTROWS(Fact_Store_ESG_Monthly),
+        Fact_Store_ESG_Monthly[Clinical_Waste_Manifest_Status] = "Compliant - Manifest on File"
+    )
+RETURN
+DIVIDE(CompliantManifests, TotalClinicRecords, 0)
+
+
+// ----------------------------------------------------------------------------------------
+// FOLDER: 04_Assurance & Internal Audit Governance (JSE Guidance & External Audit)
+// ----------------------------------------------------------------------------------------
+
+[Total Store Reporting Months] = 
+COUNTROWS(Fact_Store_ESG_Monthly)
+
+[Audit Verified Months] = 
+CALCULATE(
+    COUNTROWS(Fact_Store_ESG_Monthly),
+    Fact_Store_ESG_Monthly[Assurance_Audit_Status] = "Verified - Audit Trail Clear"
+)
+
+[Assurance Audit Readiness %] = 
+// Proportion of Store Invoices Cleared for External Assurance (Target: >=90%)
+DIVIDE([Audit Verified Months], [Total Store Reporting Months], 0)
+
+[High Risk Audit Exceptions Count] = 
+// Exceptions that will trigger an external audit qualification or management query
+CALCULATE(
+    COUNTROWS(Fact_Store_ESG_Monthly),
+    Fact_Store_ESG_Monthly[Assurance_Audit_Status] IN {
+        "Flagged - Municipal Estimate Variance",
+        "Flagged - Unexplained Consumption Spike (>20%)"
+    }
+)
+
+[Municipal Estimate Billing Share %] = 
+// Municipal estimates represent high audit risk vs actual meter reads
+VAR EstimatedRecords = 
+    CALCULATE(
+        COUNTROWS(Fact_Store_ESG_Monthly),
+        Fact_Store_ESG_Monthly[Municipal_Billing_Type] = "Municipal Estimate"
+    )
+RETURN
+DIVIDE(EstimatedRecords, [Total Store Reporting Months], 0)
+
+
+// ----------------------------------------------------------------------------------------
+// FOLDER: 05_Responsible Sourcing & Supplier ESG Governance (King IV & JSE)
+// ----------------------------------------------------------------------------------------
+
+[Total Active Suppliers] = 
+COUNTROWS(Dim_Suppliers_ESG)
+
+[Total Sourcing Spend (ZAR Millions)] = 
+SUM(Dim_Suppliers_ESG[Annual_Spend_ZAR_Millions])
+
+[Supplier CoC Sign-Off Rate %] = 
+// Percentage of active suppliers with executed ESG Code of Conduct
+VAR SignedCount = 
+    CALCULATE(
+        COUNTROWS(Dim_Suppliers_ESG),
+        Dim_Suppliers_ESG[Code_of_Conduct_Status] = "Executed & Active"
+    )
+RETURN
+DIVIDE(SignedCount, [Total Active Suppliers], 0)
+
+[Weighted Supplier ESG Score] = 
+// Sourcing Spend-Weighted ESG Audit Score (Enterprise Grade)
+VAR TotalSpend = [Total Sourcing Spend (ZAR Millions)]
+VAR WeightedPoints = 
+    SUMX(
+        Dim_Suppliers_ESG,
+        Dim_Suppliers_ESG[ESG_Audit_Score] * Dim_Suppliers_ESG[Annual_Spend_ZAR_Millions]
+    )
+RETURN
+DIVIDE(WeightedPoints, TotalSpend, 0)
+
+[High Risk Spend Exposure (ZAR Millions)] = 
+// Procurement spend tied to suppliers requiring corrective action
+CALCULATE(
+    [Total Sourcing Spend (ZAR Millions)],
+    Dim_Suppliers_ESG[ESG_Risk_Rating] = "High Risk - Corrective Action Plan Required"
+)
+
+[High Risk Spend Exposure %] = 
+DIVIDE([High Risk Spend Exposure (ZAR Millions)], [Total Sourcing Spend (ZAR Millions)], 0)
+
+
+// ----------------------------------------------------------------------------------------
+// FOLDER: 06_Conditional Formatting & Dynamic Alert Logic
+// ----------------------------------------------------------------------------------------
+
+[Status Color - Audit Readiness] = 
+// Returns Hex Code for Power BI conditional formatting
+SWITCH(
+    TRUE(),
+    [Assurance Audit Readiness %] >= 0.90, "#10B981", // Emerald Green
+    [Assurance Audit Readiness %] >= 0.80, "#F59E0B", // Amber Warning
+    "#EF4444"                                       // Red Critical
+)
+
+[Status Color - Supplier Risk] = 
+SWITCH(
+    TRUE(),
+    [High Risk Spend Exposure %] <= 0.10, "#10B981", // Low Exposure
+    [High Risk Spend Exposure %] <= 0.20, "#F59E0B", // Caution
+    "#EF4444"                                       // High Exposure Alert
+)

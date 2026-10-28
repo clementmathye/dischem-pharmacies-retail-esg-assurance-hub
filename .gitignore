@@ -1,0 +1,16 @@
+# Operating System Files
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+.DS_Store
+
+# Temporary & Log Files
+*.tmp
+*.log
+*.bak
+scratch/
+
+# Microsoft Power BI Autosave & Cache
+*.pbix.temp
+*~*.pbix

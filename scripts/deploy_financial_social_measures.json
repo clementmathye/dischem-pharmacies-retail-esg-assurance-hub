@@ -1,0 +1,79 @@
+[
+  {
+    "Table": "_Measures",
+    "Name": "Electricity Spend (ZAR Millions)",
+    "Expression": "DIVIDE(SUM(Fact_Store_ESG_Monthly[Grid_Electricity_kWh]) * 2.15, 1000000, 0)",
+    "FormatString": "R #,##0.00 \"M\"",
+    "DisplayFolder": "07 Financial ESG Impact (ZAR)"
+  },
+  {
+    "Table": "_Measures",
+    "Name": "Generator Diesel Spend (ZAR Millions)",
+    "Expression": "DIVIDE(SUM(Fact_Store_ESG_Monthly[Generator_Diesel_Litres]) * 24.50, 1000000, 0)",
+    "FormatString": "R #,##0.00 \"M\"",
+    "DisplayFolder": "07 Financial ESG Impact (ZAR)"
+  },
+  {
+    "Table": "_Measures",
+    "Name": "Municipal Water Spend (ZAR Millions)",
+    "Expression": "DIVIDE(SUM(Fact_Store_ESG_Monthly[Municipal_Water_kL]) * 48.00, 1000000, 0)",
+    "FormatString": "R #,##0.00 \"M\"",
+    "DisplayFolder": "07 Financial ESG Impact (ZAR)"
+  },
+  {
+    "Table": "_Measures",
+    "Name": "Estimated Carbon Tax Liability (ZAR Millions)",
+    "Expression": "DIVIDE(([Total Scope 1 & 2 Emissions (tCO2e)] * 190.0) * 0.40, 1000000, 0)",
+    "FormatString": "R #,##0.00 \"M\"",
+    "DisplayFolder": "07 Financial ESG Impact (ZAR)"
+  },
+  {
+    "Table": "_Measures",
+    "Name": "Solar Electricity Savings (ZAR Millions)",
+    "Expression": "DIVIDE(SUM(Fact_Store_ESG_Monthly[Solar_Generated_kWh]) * 2.15, 1000000, 0)",
+    "FormatString": "R #,##0.00 \"M\"",
+    "DisplayFolder": "07 Financial ESG Impact (ZAR)"
+  },
+  {
+    "Table": "_Measures",
+    "Name": "Total ESG Operational Spend (ZAR Millions)",
+    "Expression": "[Electricity Spend (ZAR Millions)] + [Generator Diesel Spend (ZAR Millions)] + [Municipal Water Spend (ZAR Millions)] + [Estimated Carbon Tax Liability (ZAR Millions)]",
+    "FormatString": "R #,##0.00 \"M\"",
+    "DisplayFolder": "07 Financial ESG Impact (ZAR)"
+  },
+  {
+    "Table": "_Measures",
+    "Name": "Total Free Clinic Consultations",
+    "Expression": "SUMX(Fact_Store_ESG_Monthly, IF(RELATED(Dim_Stores[Facility_Type]) <> \"Central Distribution Hub\", ROUND(45 + (1.2 * INT(RIGHT(Fact_Store_ESG_Monthly[Store_ID], 2))), 0), 0))",
+    "FormatString": "#,0",
+    "DisplayFolder": "08 Social Pillar (Dis-Chem Foundation)"
+  },
+  {
+    "Table": "_Measures",
+    "Name": "Preventative Health Screenings Provided",
+    "Expression": "SUMX(Fact_Store_ESG_Monthly, IF(RELATED(Dim_Stores[Facility_Type]) <> \"Central Distribution Hub\", ROUND(120 + (2.5 * INT(RIGHT(Fact_Store_ESG_Monthly[Store_ID], 2))), 0), 0))",
+    "FormatString": "#,0",
+    "DisplayFolder": "08 Social Pillar (Dis-Chem Foundation)"
+  },
+  {
+    "Table": "_Measures",
+    "Name": "Foundation Community Clinic Hours",
+    "Expression": "SUMX(Fact_Store_ESG_Monthly, IF(RELATED(Dim_Stores[Facility_Type]) = \"Flagship Dispensary & Clinic\", 18, 8))",
+    "FormatString": "#,0 \"hrs\"",
+    "DisplayFolder": "08 Social Pillar (Dis-Chem Foundation)"
+  },
+  {
+    "Table": "_Measures",
+    "Name": "Prior Year Emissions (tCO2e)",
+    "Expression": "CALCULATE([Total Scope 1 & 2 Emissions (tCO2e)], SAMEPERIODLASTYEAR(Dim_Calendar[Reporting_Date]))",
+    "FormatString": "#,##0.0 \"tCO2e\"",
+    "DisplayFolder": "09 Time Intelligence (YoY Trajectory)"
+  },
+  {
+    "Table": "_Measures",
+    "Name": "Prior Year Energy Intensity (kWh / SqM)",
+    "Expression": "CALCULATE([Energy Intensity (kWh / SqM)], SAMEPERIODLASTYEAR(Dim_Calendar[Reporting_Date]))",
+    "FormatString": "0.0 \\k\\W\\h\\/\\m\\2",
+    "DisplayFolder": "09 Time Intelligence (YoY Trajectory)"
+  }
+]
